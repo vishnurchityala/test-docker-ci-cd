@@ -1,18 +1,18 @@
-name: CI/CD for Windows EC2
+name: CI/CD for Windows IIS Container
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: windows-latest
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Login to Docker Hub (PowerShell)
+    - name: Docker Login (PowerShell)
       run: |
         echo $Env:DOCKER_PASSWORD | docker login -u $Env:DOCKER_USERNAME --password-stdin
       env:
@@ -25,15 +25,22 @@ jobs:
     - name: Push Docker Image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
 
-    - name: Deploy to Windows EC2 via SSH
+  deploy-to-ec2:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy latest image to Windows EC2
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
-        shell: powershell
+        port: 22
         script: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
-          docker stop web -ErrorAction SilentlyContinue
-          docker rm web -ErrorAction SilentlyContinue
-          docker run -d --name web -p 80:80 ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
+          powershell -Command "
+            docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest;
+            docker stop web -ErrorAction SilentlyContinue;
+            docker rm web -ErrorAction SilentlyContinue;
+            docker run -d --name web -p 80:80 ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
+          "
