@@ -102,6 +102,7 @@ jobs:
 
   cleanup-docker-images:
     runs-on: ubuntu-latest
+    needs : run-on-ec2
     steps:
       - name: Clean up old Docker images
         shell: pwsh
