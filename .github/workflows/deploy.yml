@@ -114,20 +114,4 @@ jobs:
           port: 22
           shell: powershell
           script: |
-            # Remove old images with tag difference greater than 2
-            $imagePrefix = "${{ secrets.DOCKER_USERNAME }}/welcome_page"
-            $currentRunNumber = [int]${{ github.run_number }}
-            docker images --format "{{.Repository}}:{{.Tag}}" | Where-Object {
-                $_ -match "^$imagePrefix:(\d+)$"
-            } | ForEach-Object {
-                if ($_ -match "^$imagePrefix:(\d+)$") {
-                    $tagNumber = [int]$Matches[1]
-                    if ([math]::Abs($tagNumber - $currentRunNumber) -gt 2) {
-                        Write-Host "Removing old image: $_"
-                        docker rmi -f $_
-                    }
-                }
-            }
-
-
-          
+            $currentRunNumber = ${{ github.run_number }} - 1; docker images --format "{{.Repository}}:{{.Tag}}" | Where-Object { ($_ -match ':(\d+)$') -and [int]$matches[1] -lt $currentRunNumber } | ForEach-Object { docker rmi $_ }
