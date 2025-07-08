@@ -46,10 +46,10 @@ jobs:
             docker rm welcome_page;
 
             Write-Host 'Pulling latest image...';
-            docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest;
+            docker pull ramuvchityala/welcome_page:latest;
 
             Write-Host 'Running new container...';
-            docker run -d --name welcome_page -p 80:80 ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest;
+            docker run -d  -p 80:80 --name welcome_page ramuvchityala/welcome_page:latest;
 
             Write-Host 'Deployment complete.';
           "
