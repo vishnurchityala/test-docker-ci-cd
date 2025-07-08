@@ -41,6 +41,8 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         port: 22
+        timeout: 30s
+        command_timeout: 10m
         script: |
           powershell -Command "& {
             try {
@@ -53,7 +55,6 @@ jobs:
               Start-Sleep -Seconds 2
 
               docker pull ramuvchityala/welcome_page:${{ github.run_number }} | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
-
               docker run -d -p 80:80 --name welcome_page ramuvchityala/welcome_page:${{ github.run_number }} | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
 
               Add-Content -Path C:\logs\deploy_log.txt -Value '[INFO] Deployment completed successfully.'
