@@ -47,10 +47,9 @@ jobs:
           port: 22
           timeout: 30s
           command_timeout: 10m
-          script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }}
-            
-            docker stop welcome_page || true
-            docker rm welcome_page || true
-
+          script: "
+            docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }} && \
+            docker stop welcome_page || true && \
+            docker rm welcome_page || true && \
             docker run -d -p 80:80 --name welcome_page ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }}
+          "
