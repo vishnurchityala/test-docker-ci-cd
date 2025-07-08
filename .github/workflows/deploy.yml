@@ -39,8 +39,8 @@ jobs:
         port: 22
         script: |
           powershell -Command "
-            docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest;
             docker stop welcome_page -ErrorAction SilentlyContinue;
             docker rm welcome_page -ErrorAction SilentlyContinue;
+            docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest;
             docker run -d --name welcome_page -p 80:80 ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
           "
