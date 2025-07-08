@@ -100,18 +100,14 @@ jobs:
           script: |
             docker run -d -p 80:80 --name welcome_page ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }}
 
-  cleanup-ec2:
-    needs: run-on-ec2
+  cleanup-docker-images:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Cleanup and deploy versioned image to Windows EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          shell: powershell
-          script: |
-            docker images --format '{{.Repository}}:{{.Tag}}' | ForEach-Object { if ($_ -match ':(\d+)$' -and [int]$matches[1] -lt $env:GITHUB_RUN_NUMBER) { docker rmi $_ } }
+      - name: Clean up old Docker images
+        shell: pwsh
+        run: |
+          docker images --format '{{.Repository}}:{{.Tag}}' | ForEach-Object {
+            if ($_ -match ':(\d+)$' -and [int]$matches[1] -lt $env:GITHUB_RUN_NUMBER) {
+              docker rmi $_
+            }
+          }
