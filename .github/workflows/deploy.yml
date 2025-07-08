@@ -99,4 +99,35 @@ jobs:
 
           script: |
             docker run -d -p 80:80 --name welcome_page ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }}
+
+  cleanup-ec2:
+    needs: run-on-ec2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cleanup and deploy versioned image to Windows EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          shell: powershell
+          script: |
+            # Remove old images with tag difference greater than 2
+            $imagePrefix = "${{ secrets.DOCKER_USERNAME }}/welcome_page"
+            $currentRunNumber = [int]${{ github.run_number }}
+            docker images --format "{{.Repository}}:{{.Tag}}" | Where-Object {
+                $_ -match "^$imagePrefix:(\d+)$"
+            } | ForEach-Object {
+                if ($_ -match "^$imagePrefix:(\d+)$") {
+                    $tagNumber = [int]$Matches[1]
+                    if ([math]::Abs($tagNumber - $currentRunNumber) -gt 2) {
+                        Write-Host "Removing old image: $_"
+                        docker rmi -f $_
+                    }
+                }
+            }
+
+
           
