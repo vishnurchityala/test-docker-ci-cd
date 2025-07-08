@@ -40,6 +40,9 @@ jobs:
         script: |
           powershell -Command "
             try {
+              # Ensure log directory exists
+              New-Item -ItemType Directory -Path C:\users\administrator\logs -Force | Out-Null
+
               Add-Content -Path C:\users\administrator\logs\deploy_log.txt -Value ('[INFO] Deployment started at ' + (Get-Date))
 
               Write-Host 'Stopping existing container...'
@@ -59,4 +62,3 @@ jobs:
               Add-Content -Path C:\users\administrator\logs\deploy_log.txt -Value ('[ERROR] ' + $_.Exception.Message)
             }
           "
-          
