@@ -114,8 +114,4 @@ jobs:
           port: 22
           shell: pwsh
           run: |
-            docker images --format "{{.Repository}}:{{.Tag}}" | ForEach-Object {
-              if ($_ -match ':(\d+)$' -and [int]$matches[1] -lt ${{ github.run_number }}) {
-                docker rmi $_
-              }
-            }
+            powershell -Command "docker images --format '{{.Repository}}:{{.Tag}}' | ForEach-Object { if ($_ -match ':(\d+)$' -and [int]$matches[1] -lt $env:GITHUB_RUN_NUMBER) { docker rmi $_ } }"
