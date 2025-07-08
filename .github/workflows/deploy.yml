@@ -9,56 +9,57 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Docker Login (PowerShell)
-      run: |
-        echo $Env:DOCKER_PASSWORD | docker login -u $Env:DOCKER_USERNAME --password-stdin
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Docker Login (PowerShell)
+        run: |
+          echo $Env:DOCKER_PASSWORD | docker login -u $Env:DOCKER_USERNAME --password-stdin
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build Docker Image with version tag
-      run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }} .
-        docker tag ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }} ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
+      - name: Build Docker Image with version tag
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }} .
+          docker tag ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }} ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
 
-    - name: Push Docker Images
-      run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }}
-        docker push ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
+      - name: Push Docker Images
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
 
   deploy-to-ec2:
     needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
-    - name: Deploy versioned image to Windows EC2
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_KEY }}
-        port: 22
-        timeout: 30s
-        command_timeout: 10m
-        script: |
-          powershell -Command "& {
-            try {
-              New-Item -ItemType Directory -Path C:\logs -Force | Out-Null
-              Add-Content -Path C:\logs\deploy_log.txt -Value ('[INFO] Deployment started at ' + (Get-Date))
+      - name: Deploy versioned image to Windows EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
+          envs: DOCKER_USERNAME
+          script: |
+            powershell -Command "& {
+              try {
+                New-Item -ItemType Directory -Path C:\logs -Force | Out-Null
+                Add-Content -Path C:\logs\deploy_log.txt -Value ('[INFO] Deployment started at ' + (Get-Date))
 
-              docker stop welcome_page | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
-              Start-Sleep -Seconds 3
-              docker rm welcome_page | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
-              Start-Sleep -Seconds 2
+                docker stop welcome_page | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
+                Start-Sleep -Seconds 3
+                docker rm welcome_page | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
+                Start-Sleep -Seconds 2
 
-              docker pull ramuvchityala/welcome_page:${{ github.run_number }} | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
-              docker run -d -p 80:80 --name welcome_page ramuvchityala/welcome_page:${{ github.run_number }} | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
+                docker pull $Env:DOCKER_USERNAME/welcome_page:${{ github.run_number }} | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
+                docker run -d -p 80:80 --name welcome_page $Env:DOCKER_USERNAME/welcome_page:${{ github.run_number }} | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
 
-              Add-Content -Path C:\logs\deploy_log.txt -Value '[INFO] Deployment completed successfully.'
-            } catch {
-              Add-Content -Path C:\logs\deploy_log.txt -Value ('[ERROR] ' + $_.Exception.Message)
-            }
-          }"
+                Add-Content -Path C:\logs\deploy_log.txt -Value '[INFO] Deployment completed successfully.'
+              } catch {
+                Add-Content -Path C:\logs\deploy_log.txt -Value ('[ERROR] ' + $_.Exception.Message)
+              }
+            }"
