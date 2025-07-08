@@ -21,13 +21,17 @@ jobs:
 
       - name: Build Docker Image with version tag
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }} .
-          docker tag ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }} ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
+          docker build -t $Env:DOCKER_USERNAME/welcome_page:${{ github.run_number }} .
+          docker tag $Env:DOCKER_USERNAME/welcome_page:${{ github.run_number }} $Env:DOCKER_USERNAME/welcome_page:latest
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
       - name: Push Docker Images
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }}
-          docker push ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
+          docker push $Env:DOCKER_USERNAME/welcome_page:${{ github.run_number }}
+          docker push $Env:DOCKER_USERNAME/welcome_page:latest
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
   deploy-to-ec2:
     needs: build-and-push
@@ -43,7 +47,10 @@ jobs:
           port: 22
           timeout: 30s
           command_timeout: 10m
-          envs: DOCKER_USERNAME
           script: |
-            docker pull $DOCKER_USERNAME/welcome_page:${{ github.run_number }}
-            docker run -d -p 80:80 --name welcome_page $DOCKER_USERNAME/welcome_page:${{ github.run_number }}
+            docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }}
+            
+            docker stop welcome_page || true
+            docker rm welcome_page || true
+
+            docker run -d -p 80:80 --name welcome_page ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }}
