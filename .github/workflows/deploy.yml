@@ -114,4 +114,4 @@ jobs:
           port: 22
           shell: powershell
           script: |
-            $currentRunNumber = ${{ github.run_number }} - 1; docker images --format "{{.Repository}}:{{.Tag}}" | Where-Object { ($_ -match ':(\d+)$') -and [int]$matches[1] -lt $currentRunNumber } | ForEach-Object { docker rmi $_ }
+             docker images --format "{{.Repository}}:{{.Tag}}" | Where-Object { ($_ -match ':(\d+)$') -and [int]$matches[1] -lt ${{ github.run_number -1}}  } | ForEach-Object { docker rmi $_ }
