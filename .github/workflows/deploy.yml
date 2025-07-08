@@ -33,12 +33,12 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
-  deploy-to-ec2:
+  pull-to-ec2:
     needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy versioned image to Windows EC2
+      - name: Deploy versioned image to Windows EC2 Step-1
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -49,7 +49,54 @@ jobs:
 
           script: |
             docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }} 
+
+  stop-on-ec2:
+    needs: pull-to-ec2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy versioned image to Windows EC2 Step-2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          shell: powershell
+
+          script: |
             docker stop welcome_page -ErrorAction SilentlyContinue
+  remove-from-ec2:
+    needs: stop-on-ec2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy versioned image to Windows EC2 Step-3
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          shell: powershell
+
+          script: |
             docker rm welcome_page -ErrorAction SilentlyContinue 
+
+  run-on-ec2:
+    needs: remove-from-ec2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy versioned image to Windows EC2 Step-4
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          shell: powershell
+
+          script: |
             docker run -d -p 80:80 --name welcome_page ${{ secrets.DOCKER_USERNAME }}/welcome_page:${{ github.run_number }}
           
