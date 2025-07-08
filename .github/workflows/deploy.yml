@@ -107,8 +107,4 @@ jobs:
       - name: Clean up old Docker images
         shell: pwsh
         run: |
-          docker images --format '{{.Repository}}:{{.Tag}}' | ForEach-Object {
-            if ($_ -match ':(\d+)$' -and [int]$matches[1] -lt $env:GITHUB_RUN_NUMBER) {
-              docker rmi $_
-            }
-          }
+          pwsh -Command "docker images --format '{{.Repository}}:{{.Tag}}' | ForEach-Object { if (\$_ -match ':(\d+)$' -and [int]\$matches[1] -lt \$env:GITHUB_RUN_NUMBER) { docker rmi \$_ } }"
