@@ -65,7 +65,7 @@ jobs:
           shell: powershell
 
           script: |
-            docker stop welcome_page -ErrorAction SilentlyContinue
+            docker stop welcome_page 
   remove-from-ec2:
     needs: stop-on-ec2
     runs-on: ubuntu-latest
@@ -81,7 +81,7 @@ jobs:
           shell: powershell
 
           script: |
-            docker rm welcome_page -ErrorAction SilentlyContinue 
+            docker rm welcome_page
 
   run-on-ec2:
     needs: remove-from-ec2
