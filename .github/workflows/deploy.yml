@@ -112,6 +112,10 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           port: 22
-          shell: powershell
-          script: |
-             docker images --format "{{.Repository}}:{{.Tag}}" | Where-Object { ($_ -match ':(\d+)$') -and [int]$matches[1] -lt ${{ github.run_number }} - 1  } | ForEach-Object { docker rmi $_ }
+          shell: pwsh
+          run: |
+            docker images --format "{{.Repository}}:{{.Tag}}" | ForEach-Object {
+              if ($_ -match ':(\d+)$' -and [int]$matches[1] -lt ${{ github.run_number }}) {
+                docker rmi $_
+              }
+            }
