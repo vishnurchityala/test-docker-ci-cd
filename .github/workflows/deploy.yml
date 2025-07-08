@@ -25,22 +25,22 @@ jobs:
     - name: Push Docker Image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
 
-  deploy-to-ec2:
-    needs: build-and-push
-    runs-on: ubuntu-latest
+  # deploy-to-ec2:
+  #   needs: build-and-push
+  #   runs-on: ubuntu-latest
 
-    steps:
-    - name: Deploy latest image to Windows EC2
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_KEY }}
-        port: 22
-        script: |
-          powershell -Command "
-            docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest;
-            docker stop welcome_page -ErrorAction SilentlyContinue;
-            docker rm welcome_page -ErrorAction SilentlyContinue;
-            docker run -d --name welcome_page -p 80:80 ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
-          "
+  #   steps:
+  #   - name: Deploy latest image to Windows EC2
+  #     uses: appleboy/ssh-action@v1.0.3
+  #     with:
+  #       host: ${{ secrets.EC2_HOST }}
+  #       username: ${{ secrets.EC2_USER }}
+  #       key: ${{ secrets.EC2_KEY }}
+  #       port: 22
+  #       script: |
+  #         powershell -Command "
+  #           docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest;
+  #           docker stop welcome_page -ErrorAction SilentlyContinue;
+  #           docker rm welcome_page -ErrorAction SilentlyContinue;
+  #           docker run -d --name welcome_page -p 80:80 ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
+  #         "
