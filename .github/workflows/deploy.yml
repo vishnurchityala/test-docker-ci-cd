@@ -45,7 +45,5 @@ jobs:
           command_timeout: 10m
           envs: DOCKER_USERNAME
           script: |
-            docker stop welcome_page || true
-            docker rm welcome_page || true
             docker pull $DOCKER_USERNAME/welcome_page:${{ github.run_number }}
             docker run -d -p 80:80 --name welcome_page $DOCKER_USERNAME/welcome_page:${{ github.run_number }}
