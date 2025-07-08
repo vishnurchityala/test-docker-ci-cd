@@ -39,8 +39,17 @@ jobs:
         port: 22
         script: |
           powershell -Command "
-            docker stop welcome_page -ErrorAction SilentlyContinue;
-            docker rm welcome_page -ErrorAction SilentlyContinue;
+            Write-Host 'Stopping existing container...';
+            docker stop welcome_page;
+            
+            Write-Host 'Removing existing container...';
+            docker rm welcome_page;
+
+            Write-Host 'Pulling latest image...';
             docker pull ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest;
-            docker run -d --name welcome_page -p 80:80 ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest
+
+            Write-Host 'Running new container...';
+            docker run -d --name welcome_page -p 80:80 ${{ secrets.DOCKER_USERNAME }}/welcome_page:latest;
+
+            Write-Host 'Deployment complete.';
           "
