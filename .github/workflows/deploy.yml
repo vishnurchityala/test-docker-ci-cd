@@ -12,7 +12,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Docker Login (PowerShell)
+      - name: Docker Login
         run: |
           echo $Env:DOCKER_PASSWORD | docker login -u $Env:DOCKER_USERNAME --password-stdin
         env:
@@ -45,21 +45,7 @@ jobs:
           command_timeout: 10m
           envs: DOCKER_USERNAME
           script: |
-            powershell -Command "& {
-              try {
-                New-Item -ItemType Directory -Path C:\logs -Force | Out-Null
-                Add-Content -Path C:\logs\deploy_log.txt -Value ('[INFO] Deployment started at ' + (Get-Date))
-
-                docker stop welcome_page | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
-                Start-Sleep -Seconds 3
-                docker rm welcome_page | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
-                Start-Sleep -Seconds 2
-
-                docker pull $Env:DOCKER_USERNAME/welcome_page:${{ github.run_number }} | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
-                docker run -d -p 80:80 --name welcome_page $Env:DOCKER_USERNAME/welcome_page:${{ github.run_number }} | Tee-Object -Append -FilePath C:\logs\deploy_log.txt
-
-                Add-Content -Path C:\logs\deploy_log.txt -Value '[INFO] Deployment completed successfully.'
-              } catch {
-                Add-Content -Path C:\logs\deploy_log.txt -Value ('[ERROR] ' + $_.Exception.Message)
-              }
-            }"
+            docker stop welcome_page || true
+            docker rm welcome_page || true
+            docker pull $DOCKER_USERNAME/welcome_page:${{ github.run_number }}
+            docker run -d -p 80:80 --name welcome_page $DOCKER_USERNAME/welcome_page:${{ github.run_number }}
