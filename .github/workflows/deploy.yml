@@ -39,20 +39,24 @@ jobs:
         port: 22
         script: |
           powershell -Command "
-            Write-Host '✅ Connected to EC2. Starting deployment...';
-            Add-Content -Path C:\deploy_log.txt -Value ('Deployment triggered from GitHub at ' + (Get-Date));
-            
-            Write-Host 'Stopping existing container...';
-            docker stop welcome_page;
+            try {
+              Add-Content -Path C:\users\administrator\logs\deploy_log.txt -Value ('[INFO] Deployment started at ' + (Get-Date))
 
-            Write-Host 'Removing existing container...';
-            docker rm welcome_page;
+              Write-Host 'Stopping existing container...'
+              docker stop welcome_page | Out-File -Append -FilePath C:\users\administrator\logs\deploy_log.txt
 
-            Write-Host 'Pulling latest image...';
-            docker pull ramuvchityala/welcome_page:latest;
+              Write-Host 'Removing existing container...'
+              docker rm welcome_page | Out-File -Append -FilePath C:\users\administrator\logs\deploy_log.txt
 
-            Write-Host 'Running new container...';
-            docker run -d -p 80:80 --name welcome_page ramuvchityala/welcome_page:latest;
+              Write-Host 'Pulling latest image...'
+              docker pull ramuvchityala/welcome_page:latest | Out-File -Append -FilePath C:\users\administrator\logs\deploy_log.txt
 
-            Write-Host '✅ Deployment complete.';
+              Write-Host 'Running new container...'
+              docker run -d -p 80:80 --name welcome_page ramuvchityala/welcome_page:latest | Out-File -Append -FilePath C:\users\administrator\logs\deploy_log.txt
+
+              Add-Content -Path C:\users\administrator\logs\deploy_log.txt -Value '[INFO] Deployment completed successfully.'
+            } catch {
+              Add-Content -Path C:\users\administrator\logs\deploy_log.txt -Value ('[ERROR] ' + $_.Exception.Message)
+            }
           "
+          
