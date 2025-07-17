@@ -1,6 +1,6 @@
 ## Test Docker CI/CD
 
-#### Step 1: Create a basic WebApp
+### Step 1: Create a basic WebApp
 
 This is a simple HTML5 page that displays the text **"Hello, World!"** in a web browser.
 
@@ -66,7 +66,7 @@ This is a simple HTML5 page that displays the text **"Hello, World!"** in a web 
 </html>
 
 ```
-#### Step 2: Create DockerFile
+### Step 2: Create DockerFile
 
 In this step, we'll containerize a static HTML page using Docker and run it on a Windows IIS web server. We'll use the official IIS base image for Windows Server 2022, copy our HTML content into the web root directory, and expose the necessary port to access the site.
 
@@ -97,7 +97,7 @@ Here:
 
 - This means requests to http://localhost:8081 on your machine will be forwarded to port **80** inside the container, where IIS is serving the web content.
 
-#### Step 3: Create ```.github/workflows``` Folder and ```docker-hub.yaml``` File
+### Step 3: Create ```.github/workflows``` Folder and ```docker-hub.yaml``` File
 The ```.github/workflows``` directory in a repository contains YAML files that define GitHub Actions workflows. These workflows automate tasks such as building, testing, and deploying your project.
 
 Each YAML file describes a set of instructions that GitHub executes on a virtual environment (e.g., Linux, Windows, or macOS), depending on your configuration.
